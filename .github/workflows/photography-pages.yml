@@ -1,0 +1,76 @@
+name: Publish photography gallery
+
+on:
+  push:
+    branches: [main, photography]
+    paths:
+      - photography/**
+      - .github/workflows/photography-pages.yml
+  public:
+  workflow_dispatch:
+
+# Building and saving a download also works while the repository is private.
+permissions:
+  contents: read
+
+concurrency:
+  group: photography-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build gallery and save download
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the gallery-only source branch
+        uses: actions/checkout@v6
+        with:
+          ref: photography
+          persist-credentials: false
+
+      - name: Build the gallery without recompressing photographs
+        run: python3 photography/build.py
+
+      - name: Save the website as a downloadable ZIP
+        uses: actions/upload-artifact@v6
+        with:
+          name: photography-gallery
+          path: photography/dist
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
+
+  deploy:
+    name: Publish the public gallery
+    needs: build
+    # GitHub Free Pages requires a public repository. Private builds still
+    # succeed and retain the downloadable website, without attempting Pages.
+    if: ${{ github.event.repository.private == false }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Download the validated website
+        uses: actions/download-artifact@v7
+        with:
+          name: photography-gallery
+          path: photography/dist
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v6
+        # Enable Pages with GitHub Actions as its source in repository settings.
+        # GITHUB_TOKEN cannot perform the initial Pages enablement.
+
+      - name: Upload only the public website
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: photography/dist
+
+      - name: Publish to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
