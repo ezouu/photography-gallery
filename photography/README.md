@@ -1,5 +1,7 @@
 # Photography gallery
 
+[Open the live gallery](https://ezouu.github.io/photography-gallery/).
+
 A white page with one centered photograph, or the opening quote:
 
 > the only advice that is objectively true is “take more pictures”
