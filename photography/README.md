@@ -38,7 +38,8 @@ photographs, and can also be uploaded to another static host.
 To add photographs, use GitHub's **Upload files** in
 [`photography/originals/`](originals/) on the `photography` branch. Upload the
 original JPEG, PNG, WebP, AVIF, GIF, or BMP files. The build imports them in
-natural filename order. GitHub's browser upload limit is 25 MiB per file;
+natural filename order; the gallery displays that order in reverse. GitHub's
+browser upload limit is 25 MiB per file;
 larger individual files require a Git upload.
 
 The Pages published-site limit is 1 GB, with a soft bandwidth limit of 100 GB
@@ -103,7 +104,8 @@ python3 photography/import_photos.py /path/to/part1.zip /path/to/part2.zip
 python3 photography/import_photos.py /path/to/a/photo/folder
 ```
 
-Photographs appear in natural filename order. Repeated imports reuse identical
+Photographs appear in reverse natural filename order, after the opening quote.
+Repeated imports reuse identical
 files instead of duplicating them. Generated `photos.json` lists the images,
 and `.photo-import.json` retains their original filenames and import metadata.
 

@@ -140,7 +140,7 @@ async function initialize() {
     if (!response.ok) throw new Error(`Photo list returned HTTP ${response.status}.`);
     const manifest = await response.json();
     if (!Array.isArray(manifest)) throw new Error("The photo list must be an array.");
-    photos = manifest.filter((photo) => photo && typeof photo.src === "string" && photo.src.length);
+    photos = manifest.filter((photo) => photo && typeof photo.src === "string" && photo.src.length).reverse();
   } catch (error) {
     manifestLoadFailed = true;
     console.error("Could not read the photo list:", error);
