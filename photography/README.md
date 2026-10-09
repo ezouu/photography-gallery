@@ -8,7 +8,9 @@ A white page with one centered photograph, or the opening quote:
 
 Scroll vertically to move between full-height frames. Each frame snaps into
 place when scrolling settles. Small dots mark your position and link to each
-frame without visible labels or numbers. The quote and photographs are centered
+frame without visible labels or numbers. A single dark dot slides between the
+nodes with a slight stretch and settle; reduced-motion preferences make it
+instant. The quote and photographs are centered
 in the full screen, with a small loading note at the bottom of the first photo
 only.
 

@@ -2,6 +2,8 @@ const gallery = document.querySelector("#gallery");
 const navigation = document.querySelector("#gallery-nav");
 const announcement = document.querySelector("#announcement");
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+const indicator = document.querySelector(".position-indicator");
+const indicatorDot = indicator.querySelector(".indicator-dot");
 
 const frames = [document.querySelector("#quote")];
 const links = [navigation.querySelector("a")];
@@ -9,6 +11,31 @@ const photographs = new Map();
 let activeFrame = -1;
 let manifestFailed = false;
 let scrollUpdate = null;
+let indicatorTarget = null;
+let indicatorFlow = null;
+
+function updateIndicator(index) {
+  const link = links[index].getBoundingClientRect();
+  const rail = indicator.parentElement.getBoundingClientRect();
+  const target = link.top + link.height / 2 - rail.top - indicator.offsetHeight / 2;
+  if (target === indicatorTarget) return;
+
+  const animate = indicatorTarget !== null && !reducedMotion.matches;
+  const currentShape = getComputedStyle(indicatorDot).transform;
+  indicatorFlow?.cancel();
+  indicator.style.setProperty("--indicator-y", `${target}px`);
+  indicatorTarget = target;
+
+  if (animate && typeof indicatorDot.animate === "function") {
+    indicatorFlow = indicatorDot.animate([
+      { transform: currentShape === "none" ? "scale(1)" : currentShape },
+      { transform: "scale(.94, 1.25)", offset: .3 },
+      { transform: "scale(1)" },
+    ], { duration: 440, easing: "cubic-bezier(.22, 1, .36, 1)" });
+  }
+}
+
+reducedMotion.addEventListener?.("change", () => indicatorFlow?.cancel());
 
 function announceCurrent() {
   if (activeFrame === 0) {
@@ -74,6 +101,7 @@ function updateCurrentFrame() {
     });
     announceCurrent();
   }
+  updateIndicator(nearest);
   void loadPhotograph(frames[nearest], "high");
   void loadPhotograph(frames[nearest + 1]);
 }
