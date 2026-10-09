@@ -10,9 +10,20 @@
     <script type="module" src="gallery.js"></script>
   </head>
   <body>
-    <main id="gallery" class="gallery" aria-label="Photography gallery. Use the left and right arrow keys to change slides.">
-      <p id="quote" class="quote">the only advice that is objectively true is “take more pictures”</p>
-      <span id="announcement" class="visually-hidden" role="status" aria-live="polite" aria-atomic="true"></span>
+    <aside class="sidebar" aria-label="Gallery navigation">
+      <a class="sidebar-title" href="#quote">Photographs</a>
+      <nav aria-label="Gallery contents">
+        <ol id="gallery-nav">
+          <li><a href="#quote" aria-current="location">Quote</a></li>
+        </ol>
+      </nav>
+      <p class="loading-note">Images may take a moment to load.</p>
+    </aside>
+    <main id="gallery" class="gallery" tabindex="0" aria-label="Photography gallery. Scroll to move between photographs.">
+      <section id="quote" class="frame quote-frame" aria-label="Opening quote">
+        <p class="quote">the only advice that is objectively true is “take more pictures”</p>
+      </section>
     </main>
+    <span id="announcement" class="visually-hidden" role="status" aria-live="polite" aria-atomic="true"></span>
   </body>
 </html>

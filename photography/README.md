@@ -6,9 +6,10 @@ A white page with one centered photograph, or the opening quote:
 
 > the only advice that is objectively true is “take more pictures”
 
-Left and right arrow keys move backward and forward. Navigation wraps through
-the quote and all photographs. On touch screens, swipe horizontally. There are
-no visible buttons, captions, counters, headers, or footers.
+Scroll vertically to move between full-height frames. Each frame snaps into
+place when scrolling settles. A small sidebar links to the quote and each
+photograph, marks the current frame, and notes that images may take a moment
+to load. The sidebar becomes narrower on phones to leave room for the photos.
 
 ## Free cloud hosting with GitHub Pages
 
@@ -39,8 +40,8 @@ To add photographs, use GitHub's **Upload files** in
 [`photography/originals/`](originals/) on the `photography` branch. Upload the
 original JPEG, PNG, WebP, AVIF, GIF, or BMP files. The build imports them in
 natural filename order; the gallery displays that order in reverse. GitHub's
-browser upload limit is 25 MiB per file;
-larger individual files require a Git upload.
+browser upload limit is 25 MiB per file; larger individual files require a Git
+upload.
 
 The Pages published-site limit is 1 GB, with a soft bandwidth limit of 100 GB
 per month. There is no resizing to fit these limits: originals are retained,
@@ -105,8 +106,8 @@ python3 photography/import_photos.py /path/to/a/photo/folder
 ```
 
 Photographs appear in reverse natural filename order, after the opening quote.
-Repeated imports reuse identical
-files instead of duplicating them. Generated `photos.json` lists the images,
+Repeated imports reuse identical files instead of duplicating them.
+Generated `photos.json` lists the images,
 and `.photo-import.json` retains their original filenames and import metadata.
 
 ## Photo quality
@@ -118,9 +119,9 @@ and `.photo-import.json` retains their original filenames and import metadata.
 - Images fit within the viewport with a small white margin, keep their aspect
   ratio, and are never cropped. Browser scaling and color management depend
   on the device and browser.
-- The next original is prefetched. The previous slide stays visible until the
-  requested image is decoded, and rapid navigation cancels outdated loads.
-- Pinch zoom is allowed; swiping is disabled while zoomed so images can be panned.
+- Nearby originals load ahead of scrolling; each photo appears once decoded.
+  Frame dimensions stay fixed while an image loads.
+- Native vertical touch scrolling and pinch zoom remain available.
 
 JPEG, PNG, WebP, AVIF, GIF, and BMP are supported. HEIC, TIFF, RAW, and other
 formats that browsers cannot reliably display need conversion before import;

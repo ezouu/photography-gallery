@@ -2,9 +2,9 @@
 
 [Open the gallery](https://ezouu.github.io/photography-gallery/).
 
-A white page, one centered original photograph, left/right arrow-key navigation,
-and an opening quote. Original photographs are published without resizing or
-recompression.
+A white page with an opening quote, centered original photographs in frames
+that snap into place as you scroll, and a small numbered sidebar. Original
+photographs are published without resizing or recompression.
 
 The `photography` branch supplies the deployed website. See the
 [build and photo-upload instructions](photography/README.md).

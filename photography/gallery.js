@@ -1,159 +1,183 @@
 const gallery = document.querySelector("#gallery");
-const quote = document.querySelector("#quote");
+const navigation = document.querySelector("#gallery-nav");
 const announcement = document.querySelector("#announcement");
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
-let photos = [];
-let slide = 0;
-let revision = 0;
-let ready = false;
-let manifestLoadFailed = false;
-let queuedMoves = 0;
-let visibleImage = null;
-let loadingImage = null;
-let preloadedImage = null;
+const frames = [document.querySelector("#quote")];
+const links = [navigation.querySelector("a")];
+const photographs = new Map();
+let activeFrame = -1;
+let manifestFailed = false;
+let scrollUpdate = null;
 
-function photoUrl(photo) {
-  return new URL(photo.src, document.baseURI).href;
-}
-
-function preloadNext() {
-  const next = (slide + 1) % (photos.length + 1);
-  if (next === 0) {
-    preloadedImage?.removeAttribute("src");
-    preloadedImage = null;
+function announceCurrent() {
+  if (activeFrame === 0) {
+    announcement.textContent = manifestFailed
+      ? "The photographs could not be loaded."
+      : "Opening quote.";
     return;
   }
-
-  const src = photoUrl(photos[next - 1]);
-  if (preloadedImage?.src === src) return;
-  preloadedImage?.removeAttribute("src");
-  preloadedImage = new Image();
-  preloadedImage.decoding = "async";
-  preloadedImage.fetchPriority = "low";
-  preloadedImage.src = src;
+  const photograph = photographs.get(frames[activeFrame]);
+  if (!photograph) return;
+  const description = `Photograph ${activeFrame} of ${frames.length - 1}`;
+  announcement.textContent = photograph.failed
+    ? `${description} could not be loaded.`
+    : photograph.loaded ? `${description}.` : `${description} is loading.`;
 }
 
-async function showSlide() {
-  const thisRevision = ++revision;
-  loadingImage?.removeAttribute("src");
-  loadingImage = null;
-
-  if (slide === 0) {
-    visibleImage?.remove();
-    visibleImage = null;
-    quote.hidden = false;
-    announcement.textContent = manifestLoadFailed ? "The photographs could not be loaded." : "Opening quote.";
-    preloadNext();
-    return;
-  }
-
-  const photo = photos[slide - 1];
-  const src = photoUrl(photo);
-  const image = preloadedImage?.src === src ? preloadedImage : new Image();
-  if (image === preloadedImage) preloadedImage = null;
-  image.className = "gallery-photo";
-  image.alt = photo.alt || "Photograph";
-  image.draggable = false;
-  image.decoding = "async";
-  image.fetchPriority = "high";
-  loadingImage = image;
-  if (image.src !== src) image.src = src;
+async function loadPhotograph(frame, priority = "low") {
+  const photograph = photographs.get(frame);
+  if (!photograph) return;
+  const { image, status, photo } = photograph;
+  if (priority === "high") image.fetchPriority = "high";
+  if (photograph.started) return;
+  photograph.started = true;
+  image.fetchPriority = priority;
+  frame.setAttribute("aria-busy", "true");
+  status.hidden = false;
 
   try {
+    image.src = new URL(photo.src, document.baseURI).href;
+    // Decode the original directly. No resized or recompressed versions exist.
     await image.decode();
-    if (thisRevision !== revision) return;
-
-    // Keep the previous slide in place until the original image is decoded.
-    visibleImage?.remove();
-    quote.hidden = true;
-    gallery.append(image);
-    visibleImage = image;
-    loadingImage = null;
-    announcement.textContent = `Photograph ${slide} of ${photos.length}.`;
-    preloadNext();
+    photograph.loaded = true;
+    image.hidden = false;
+    status.hidden = true;
   } catch (error) {
-    if (thisRevision !== revision) return;
-    loadingImage = null;
-    announcement.textContent = "This photograph could not be loaded.";
+    photograph.failed = true;
+    status.textContent = "This photograph could not be loaded.";
     console.error("Could not load photograph:", photo.src, error);
   }
+  frame.setAttribute("aria-busy", "false");
+  if (frames[activeFrame] === frame) announceCurrent();
 }
 
-function move(direction) {
-  if (!ready) {
-    queuedMoves += direction;
-    return;
+function updateCurrentFrame() {
+  const viewport = gallery.getBoundingClientRect();
+  const center = viewport.top + gallery.clientTop + gallery.clientHeight / 2;
+  let nearest = 0;
+  let distance = Infinity;
+  frames.forEach((frame, index) => {
+    const bounds = frame.getBoundingClientRect();
+    const candidate = Math.abs(bounds.top + bounds.height / 2 - center);
+    if (candidate < distance) {
+      nearest = index;
+      distance = candidate;
+    }
+  });
+
+  if (nearest !== activeFrame) {
+    activeFrame = nearest;
+    links.forEach((link, index) => {
+      if (index === nearest) link.setAttribute("aria-current", "location");
+      else link.removeAttribute("aria-current");
+    });
+    announceCurrent();
   }
-  if (!photos.length) return;
-  const count = photos.length + 1;
-  slide = ((slide + direction) % count + count) % count;
-  void showSlide();
+  void loadPhotograph(frames[nearest], "high");
+  void loadPhotograph(frames[nearest + 1]);
 }
 
-document.addEventListener("keydown", (event) => {
-  if (event.altKey || event.ctrlKey || event.metaKey) return;
-  if (event.target instanceof HTMLElement &&
-      (event.target.isContentEditable || event.target.matches("input, textarea, select"))) return;
-  if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
-    event.preventDefault();
-    move(event.key === "ArrowRight" ? 1 : -1);
-  }
-});
-
-// Swiping provides the same navigation on touch screens, with no visible UI.
-// A second pointer cancels the gesture so pinch-to-zoom remains available.
-const touches = new Set();
-let swipe = null;
-function updateZoom() {
-  const zoomed = (window.visualViewport?.scale || 1) > 1.01;
-  gallery.classList.toggle("is-zoomed", zoomed);
-  if (zoomed) swipe = null;
+function scheduleScrollUpdate() {
+  if (scrollUpdate !== null) return;
+  scrollUpdate = requestAnimationFrame(() => {
+    scrollUpdate = null;
+    updateCurrentFrame();
+  });
 }
-window.visualViewport?.addEventListener("resize", updateZoom);
-updateZoom();
 
-gallery.addEventListener("pointerdown", (event) => {
-  if (event.pointerType !== "touch" || gallery.classList.contains("is-zoomed")) return;
-  touches.add(event.pointerId);
-  swipe = touches.size === 1 ? { id: event.pointerId, x: event.clientX, y: event.clientY } : null;
+function scrollToFrame(frame, smooth = true) {
+  const top = gallery.scrollTop + frame.getBoundingClientRect().top
+    - gallery.getBoundingClientRect().top - gallery.clientTop;
+  gallery.scrollTo({
+    top,
+    behavior: smooth && !reducedMotion.matches ? "smooth" : "auto",
+  });
+}
+
+function scrollToHash() {
+  const frame = frames.find((candidate) => `#${candidate.id}` === location.hash)
+    || (location.hash ? null : frames[0]);
+  if (frame) scrollToFrame(frame, false);
+}
+
+navigation.addEventListener("click", (event) => {
+  if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+  const link = event.target.closest("a");
+  if (!link || !navigation.contains(link)) return;
+  const frame = frames.find((candidate) => `#${candidate.id}` === link.getAttribute("href"));
+  if (!frame) return;
+  event.preventDefault();
+  if (location.hash !== `#${frame.id}`) history.pushState(null, "", `#${frame.id}`);
+  scrollToFrame(frame);
 });
 
-gallery.addEventListener("pointerup", (event) => {
-  touches.delete(event.pointerId);
-  if (swipe?.id !== event.pointerId) return;
-  const dx = event.clientX - swipe.x;
-  const dy = event.clientY - swipe.y;
-  swipe = null;
-  if (Math.abs(dx) >= 50 && Math.abs(dx) > Math.abs(dy) * 1.25) {
-    move(dx < 0 ? 1 : -1);
-  }
-});
-
-gallery.addEventListener("pointercancel", (event) => {
-  touches.delete(event.pointerId);
-  swipe = null;
-});
+// Scrolling, touch gestures, pinch zoom, and keyboard scrolling stay native.
+gallery.addEventListener("scroll", scheduleScrollUpdate, { passive: true });
+window.addEventListener("resize", scheduleScrollUpdate);
+window.addEventListener("hashchange", scrollToHash);
 
 async function initialize() {
+  updateCurrentFrame();
   try {
     const response = await fetch("photos.json", { cache: "no-store" });
     if (!response.ok) throw new Error(`Photo list returned HTTP ${response.status}.`);
     const manifest = await response.json();
     if (!Array.isArray(manifest)) throw new Error("The photo list must be an array.");
-    photos = manifest.filter((photo) => photo && typeof photo.src === "string" && photo.src.length).reverse();
-  } catch (error) {
-    manifestLoadFailed = true;
-    console.error("Could not read the photo list:", error);
-    announcement.textContent = "The photographs could not be loaded.";
-  }
+    const photos = manifest.filter((photo) => photo && typeof photo.src === "string" && photo.src.length).reverse();
 
-  ready = true;
-  if (queuedMoves && photos.length) {
-    const count = photos.length + 1;
-    slide = ((queuedMoves % count) + count) % count;
+    photos.forEach((photo, index) => {
+      const number = String(index + 1).padStart(2, "0");
+      const description = `Photograph ${index + 1} of ${photos.length}`;
+      const frame = document.createElement("section");
+      frame.id = `photo-${number}`;
+      frame.className = "frame photo-frame";
+      frame.setAttribute("aria-label", description);
+
+      const image = new Image();
+      image.className = "gallery-photo";
+      image.alt = typeof photo.alt === "string" && photo.alt ? photo.alt : description;
+      image.draggable = false;
+      image.decoding = "async";
+      image.hidden = true;
+
+      const status = document.createElement("p");
+      status.className = "photo-status";
+      status.textContent = "Loading photograph…";
+      status.setAttribute("aria-hidden", "true");
+      frame.append(image, status);
+      gallery.append(frame);
+
+      const item = document.createElement("li");
+      const link = document.createElement("a");
+      link.href = `#${frame.id}`;
+      link.textContent = number;
+      link.setAttribute("aria-label", description);
+      item.append(link);
+      navigation.append(item);
+
+      frames.push(frame);
+      links.push(link);
+      photographs.set(frame, { photo, image, status, started: false, loaded: false, failed: false });
+    });
+
+    if ("IntersectionObserver" in window) {
+      const observer = new IntersectionObserver((entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          void loadPhotograph(entry.target, frames[activeFrame] === entry.target ? "high" : "low");
+          observer.unobserve(entry.target);
+        }
+      }, { root: gallery, rootMargin: "0px 0px 200px 0px" });
+      photographs.forEach((_, frame) => observer.observe(frame));
+    }
+    scrollToHash();
+    updateCurrentFrame();
+  } catch (error) {
+    manifestFailed = true;
+    announcement.textContent = "The photographs could not be loaded.";
+    console.error("Could not read the photo list:", error);
   }
-  queuedMoves = 0;
-  void showSlide();
 }
 
 void initialize();
