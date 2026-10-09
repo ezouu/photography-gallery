@@ -146,6 +146,12 @@ async function initialize() {
       status.textContent = "Loading photograph…";
       status.setAttribute("aria-hidden", "true");
       frame.append(image, status);
+      if (index === 0) {
+        const note = document.createElement("p");
+        note.className = "loading-note";
+        note.textContent = "Images may take a moment to load.";
+        frame.append(note);
+      }
       gallery.append(frame);
 
       const item = document.createElement("li");

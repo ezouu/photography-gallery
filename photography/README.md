@@ -9,7 +9,8 @@ A white page with one centered photograph, or the opening quote:
 Scroll vertically to move between full-height frames. Each frame snaps into
 place when scrolling settles. Small dots mark your position and link to each
 frame without visible labels or numbers. The quote and photographs are centered
-in the full screen, with a small loading note at the bottom.
+in the full screen, with a small loading note at the bottom of the first photo
+only.
 
 ## Free cloud hosting with GitHub Pages
 
