@@ -151,7 +151,6 @@ async function initialize() {
       const item = document.createElement("li");
       const link = document.createElement("a");
       link.href = `#${frame.id}`;
-      link.textContent = number;
       link.setAttribute("aria-label", description);
       item.append(link);
       navigation.append(item);

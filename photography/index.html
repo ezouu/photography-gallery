@@ -10,20 +10,19 @@
     <script type="module" src="gallery.js"></script>
   </head>
   <body>
-    <aside class="sidebar" aria-label="Gallery navigation">
-      <a class="sidebar-title" href="#quote">Photographs</a>
+    <aside class="sidebar" aria-label="Gallery position">
       <nav aria-label="Gallery contents">
         <ol id="gallery-nav">
-          <li><a href="#quote" aria-current="location">Quote</a></li>
+          <li><a href="#quote" aria-label="Opening quote" aria-current="location"></a></li>
         </ol>
       </nav>
-      <p class="loading-note">Images may take a moment to load.</p>
     </aside>
     <main id="gallery" class="gallery" tabindex="0" aria-label="Photography gallery. Scroll to move between photographs.">
       <section id="quote" class="frame quote-frame" aria-label="Opening quote">
         <p class="quote">the only advice that is objectively true is “take more pictures”</p>
       </section>
     </main>
+    <p class="loading-note">Images may take a moment to load.</p>
     <span id="announcement" class="visually-hidden" role="status" aria-live="polite" aria-atomic="true"></span>
   </body>
 </html>

@@ -7,9 +7,9 @@ A white page with one centered photograph, or the opening quote:
 > the only advice that is objectively true is “take more pictures”
 
 Scroll vertically to move between full-height frames. Each frame snaps into
-place when scrolling settles. A small sidebar links to the quote and each
-photograph, marks the current frame, and notes that images may take a moment
-to load. The sidebar becomes narrower on phones to leave room for the photos.
+place when scrolling settles. Small dots mark your position and link to each
+frame without visible labels or numbers. The quote and photographs are centered
+in the full screen, with a small loading note at the bottom.
 
 ## Free cloud hosting with GitHub Pages
 
